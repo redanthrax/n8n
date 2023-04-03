@@ -33,6 +33,9 @@ export async function keapApiRequest(
 		uri: uri || `https://api.infusionsoft.com/crm/rest/v1${resource}`,
 		json: true,
 	};
+
+    console.log(options);
+
 	try {
 		options = Object.assign({}, options, option);
 		if (Object.keys(headers).length !== 0) {
@@ -44,6 +47,7 @@ export async function keapApiRequest(
 		//@ts-ignore
 		return await this.helpers.requestOAuth2.call(this, 'keapOAuth2Api', options);
 	} catch (error) {
+        console.log(error);
 		throw new NodeApiError(this.getNode(), error as JsonObject);
 	}
 }

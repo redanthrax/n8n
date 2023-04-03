@@ -26,6 +26,8 @@ import { fileFields, fileOperations } from './FileDescription';
 
 import { companyFields, companyOperations } from './CompanyDescription';
 
+import { opportunityOperations, opportunityFields } from './OpportunityDescription';
+
 import type {
 	IAddress,
 	IContact,
@@ -46,6 +48,8 @@ import type { IEcommerceProduct } from './EcommerceProductInterface';
 import type { IFile } from './FileInterface';
 
 import type { ICompany } from './CompanyInterface';
+
+import type { IOpportunity } from './OpportunityInterface';
 
 import { capitalCase, pascalCase } from 'change-case';
 
@@ -111,6 +115,10 @@ export class Keap implements INodeType {
 						name: 'File',
 						value: 'file',
 					},
+					{
+						name: 'Opportunity',
+						value: 'opportunity',
+					},
 				],
 				default: 'company',
 			},
@@ -138,6 +146,9 @@ export class Keap implements INodeType {
 			// FILE
 			...fileOperations,
 			...fileFields,
+            // OPPORTUNITY
+            ...opportunityOperations,
+            ...opportunityFields,
 		],
 	};
 
@@ -821,6 +832,33 @@ export class Keap implements INodeType {
 					responseData = await keapApiRequest.call(this, 'POST', '/files', body);
 				}
 			}
+
+            if (resource === 'opportunity') {
+				if (operation === 'getAll') {
+					const returnAll = this.getNodeParameter('returnAll', i);
+					const options = this.getNodeParameter('options', i);
+					keysToSnakeCase(options);
+					Object.assign(qs, options);
+					if (qs.fields) {
+						qs.optional_properties = qs.fields;
+						delete qs.fields;
+					}
+					if (returnAll) {
+						responseData = await keapApiRequestAllItems.call(
+							this,
+							'opportunities',
+							'GET',
+							'/opportunities',
+							{},
+							qs,
+						);
+					} else {
+						qs.limit = this.getNodeParameter('limit', i);
+						responseData = await keapApiRequest.call(this, 'GET', '/opportunities', {}, qs);
+						responseData = responseData.companies;
+					}
+				}
+            }
 
 			const executionData = this.helpers.constructExecutionMetaData(
 				this.helpers.returnJsonArray(responseData as IDataObject[]),
